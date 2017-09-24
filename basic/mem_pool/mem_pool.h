@@ -56,9 +56,8 @@ MEM_POOL_ND*    mem_pool_node_create(unsigned int  block_size, unsigned int bloc
 void            mem_pool_node_destroy(MEM_POOL_ND *mem_pool_nd);
 
 void*           mem_pool_malloc(MEM_POOL_ND * mem_pool_nd ,int size);
-void            mem_pool_node_free(MEM_POOL_ND* mem_pool_nd,void* p);
+void            mem_pool_free(MEM_POOL_ND* mem_pool_nd,void* p);
 
-int             mem_pool_reset(MEM_POOL_ND* mem_pool_nd);
 
 
 

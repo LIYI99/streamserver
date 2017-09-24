@@ -41,7 +41,7 @@ MEM_POOL_ND*    mem_pool_node_create(unsigned int  block_size, unsigned int bloc
         pt+= s->block_size;
 
     }
-
+    
     return s;
 
 ERR1:
@@ -91,13 +91,14 @@ static int  find_block_index(MEM_POOL_ND * s ,unsigned int next_index,int n)
 
     for (k = 0 ; k < s->block_nums; k++, next_index++)
     {
-        if( s->mem_nd[next_index%s->block_nums].use == 0)
+        if( s->mem_nd[next_index % s->block_nums].use == 0)
             cnt++;
         else 
             cnt = 0;
         if(cnt == n)
             break;
     }
+    printf("func:%s,cnt:%d need n:%d\n",__func__,cnt,n);
     if(cnt == n && ((next_index%s->block_nums) - cnt >= 0))
         return next_index%s->block_nums;
     else 
@@ -112,9 +113,10 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
     int n =  size / s->block_size;
     if( size % s->block_size )
         n += 1;
+    printf("#####size:%d n:%d\n",size,n);
     void *p = NULL;
     int index;
-
+    
     if(s->lock_on)
        pthread_mutex_lock(&s->pool_lock);
     
@@ -125,14 +127,17 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
             break;
         //init malloc mem block  ALLOC_LIST *ls = NULL;
         int k ;
-        for(k = 0 ;k < (n-1); k++)
+        for(k = 0 ;k < n; k++)
             s->mem_nd[index-k].use = 2;
+        printf("xxxx1 idex - n :%d index:%d\n",index -n,index );
         //init malloc mem title node 
-        s->mem_nd[index-n].use = 1;
-        s->mem_nd[index-n].size = size;
-        
-        p = s->mem_nd[index-n].p;
         s->usecnts+= n;
+        n = n -1;
+
+        s->mem_nd[index-n].use = 1;
+        s->mem_nd[index-n].size = n+1; //write used nums block 
+        p = s->mem_nd[index-n].p;
+
         s->next_index = index;
         break;
 
@@ -140,7 +145,7 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
     
     if(s->lock_on)
         pthread_mutex_unlock(&s->pool_lock);
-
+    printf("return:%p \n",p);
     if(p != NULL)
         return p;
     
@@ -189,8 +194,12 @@ void  mem_pool_free(MEM_POOL_ND* s,void* p)
     while(p <= (s->p + s->block_nums*s->block_size)){
         
         index = (p - s->p)/s->block_size;
+        printf("p ==%p, s->==%p  p - s->p:%ld index:%d\n",p,s->p,p - s->p,index);
         if((p - s->p) % s->block_size != 0)
             index+=1;
+        printf("free index:%d\n",index);
+        
+        s->usecnts -= s->mem_nd[index].size;
         s->mem_nd[index].use = 0;
         s->mem_nd[index].size = 0;
         index++;
@@ -232,14 +241,6 @@ void  mem_pool_free(MEM_POOL_ND* s,void* p)
     free(ls);
     
     return;
-
-
-}
-
-int  mem_pool_reset(MEM_POOL_ND* s)
-{
-    
-    return 0;
 
 
 }
