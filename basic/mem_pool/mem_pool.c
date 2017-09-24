@@ -87,7 +87,7 @@ void            mem_pool_node_destroy(MEM_POOL_ND *s)
 
 static int  find_block_index(MEM_POOL_ND * s ,unsigned int next_index,int n)
 {
-    int k = 0,cnt = 0;
+    int k = 0,cnt = 0 ;
 
     for (k = 0 ; k < s->block_nums; k++, next_index++)
     {
@@ -95,11 +95,21 @@ static int  find_block_index(MEM_POOL_ND * s ,unsigned int next_index,int n)
             cnt++;
         else 
             cnt = 0;
-        if(cnt == n)
-            break;
+      
+
+        if(cnt == n){
+
+            int j = 0;
+            j = next_index % s->block_nums - n ;
+            if( j >= 0)
+                break;
+            else 
+                cnt = 0;
+        }
     }
-    printf("func:%s,cnt:%d need n:%d\n",__func__,cnt,n);
-    if(cnt == n && ((next_index%s->block_nums) - cnt >= 0))
+    
+    printf("xxxfunc:%s,cnt:%d need n:%d next_index m s->block_nums:%d\n",__func__,cnt,n,next_index%s->block_nums);
+    if(cnt == n) 
         return next_index%s->block_nums;
     else 
         return -1;
