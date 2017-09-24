@@ -9,7 +9,6 @@
 
 
 
-#include "darr_queue.h"
 #include <pthread.h>
 #include <time.h>
 //每一个单独的内存池结点在线程上是安全的
@@ -20,19 +19,13 @@
 
 
 typedef struct mem_pool_node    MEM_POOL_ND;
+typedef struct malloc_list {
+    void* p;
+    struct malloc_list *last;
+    struct malloc_list *next;
 
-struct mem_pool_node{
-                        //and a logsvr                
-    pthread_mutex_t     pool_lock;
-    unsigned int        lock_on;
-    unsigned int        block_size;              
-    unsigned int        block_nums;
-    unsigned int        block_use_cnt;
-    MEM_MANAGE_ND*      mem_nd;
-    void*               p;
+}MALLOC_LIST;
 
-
-};
 
 typedef struct mem_manage_node{
     unsigned int        index;
@@ -41,6 +34,21 @@ typedef struct mem_manage_node{
     unsigned int        use;
     unsigned int        persistent_state;   // if value is not 0,than it is a start title.
 }MEM_MANAGE_ND;
+
+struct mem_pool_node{
+                        //and a logsvr                
+    pthread_mutex_t     pool_lock;
+    unsigned int        lock_on;
+    unsigned int        block_size;              
+    unsigned int        block_nums;
+    unsigned int        next_index;
+    unsigned int        usecnts;
+    MEM_MANAGE_ND*      mem_nd;
+    void*               p;
+    MALLOC_LIST         malloc_list;
+
+};
+
 
 
 MEM_POOL_ND*    mem_pool_node_create(unsigned int  block_size, unsigned int block_nums,

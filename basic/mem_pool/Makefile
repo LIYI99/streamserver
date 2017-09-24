@@ -10,7 +10,7 @@ LOPTS = -g
 TARGET = libmem_pool.a
 
 $(TARGET) : $(COBJS) $(SOBJS) 
-#$(AR) -r libmem_pool.a  *.o
+	$(AR) -r $(TARGET)  *.o
 
 %.o: %.c
 	$(CC) -c $(COPS) -I. -o $@ $<
