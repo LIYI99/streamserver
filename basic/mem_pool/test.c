@@ -23,7 +23,7 @@ static void*    test_func(void *data){
         printf("need size:%d\n",k);
         p =  mem_pool_malloc(s,k);
 
-        usleep(10000);
+        usleep(k*3);
         printf("p :%p\n",p);
         mem_pool_free(s,p);
         p = NULL;
@@ -55,7 +55,7 @@ int main(int argv,char**argc){
 
     pthread_mutex_init(&testlock,NULL);
     
-    int k = 0,thds = 1;
+    int k = 0,thds = 100;
     
 
     for(k =  0 ; k < thds ; k ++){
@@ -69,7 +69,8 @@ int main(int argv,char**argc){
         pthread_join(test_id[k],NULL);
     }
       
-   sleep(5); 
+    printf("pool_nd->usecnts:%d,s->malloc_list.next:%p\n",pool_nd->usecnts,
+            pool_nd->malloc_list.next);
     mem_pool_node_destroy(pool_nd);
 
 

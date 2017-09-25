@@ -91,24 +91,32 @@ static int  find_block_index(MEM_POOL_ND * s ,unsigned int next_index,int n)
 
     for (k = 0 ; k < s->block_nums; k++, next_index++)
     {
-        if( s->mem_nd[next_index % s->block_nums].use == 0)
+        int index = next_index % s->block_nums;
+            
+        if( s->mem_nd[index].use == 0)
             cnt++;
-        else 
+        if( s->mem_nd[index].use == 2 || s->mem_nd[index].use == 1)
             cnt = 0;
-      
+        
+        if( s->mem_nd[index].use == 1){
+            k += s->mem_nd[index].size;
+            next_index += s->mem_nd[index].size;
+        }
 
-        if(cnt == n){
-
+        if( cnt == n )
+        {
             int j = 0;
             j = next_index % s->block_nums - n ;
             if( j >= 0)
                 break;
-            else 
-                cnt = 0;
+
+            k -= (n+j);             // draw back nums block of 0 index s->mem_nd nums
+            next_index -= (n+j);    //draw back 0 index of s->mem_nd
+            cnt = 0 ;
         }
     }
     
-    printf("xxxfunc:%s,cnt:%d need n:%d next_index m s->block_nums:%d\n",__func__,cnt,n,next_index%s->block_nums);
+    //printf("xxxfunc:%s,cnt:%d need n:%d next_index m s->block_nums:%d\n",__func__,cnt,n,next_index%s->block_nums);
     if(cnt == n) 
         return next_index%s->block_nums;
     else 
@@ -123,7 +131,10 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
     int n =  size / s->block_size;
     if( size % s->block_size )
         n += 1;
-    printf("#####size:%d n:%d\n",size,n);
+    if(n <= 0)
+        return NULL;
+
+    //printf("#####size:%d n:%d\n",size,n);
     void *p = NULL;
     int index;
     
@@ -139,7 +150,7 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
         int k ;
         for(k = 0 ;k < n; k++)
             s->mem_nd[index-k].use = 2;
-        printf("xxxx1 idex - n :%d index:%d\n",index -n,index );
+     //   printf("xxxx1 idex - n :%d index:%d\n",index -n,index );
         //init malloc mem title node 
         s->usecnts+= n;
         n = n -1;
@@ -155,13 +166,14 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
     
     if(s->lock_on)
         pthread_mutex_unlock(&s->pool_lock);
-    printf("return:%p \n",p);
+    
     if(p != NULL)
         return p;
     
     p = malloc(size);
     if(p == NULL)
         return p;
+    
 
     //add p int mem pool nd list
     MALLOC_LIST *ls = NULL;
@@ -174,7 +186,8 @@ void*   mem_pool_malloc(MEM_POOL_ND * s ,int size){
     ls->next = NULL;
     ls->last = NULL;
 
-    MALLOC_LIST *lx = s->malloc_list.next;
+    MALLOC_LIST *lx = &s->malloc_list;
+
     
     if(s->lock_on)
         pthread_mutex_lock(&s->pool_lock);
@@ -198,32 +211,36 @@ void  mem_pool_free(MEM_POOL_ND* s,void* p)
     if(s == NULL || p == NULL)
        return ;
     int index = -1;
-    
+     
     if(s->lock_on)
         pthread_mutex_lock(&s->pool_lock);
     while(p <= (s->p + s->block_nums*s->block_size)){
         
+        if( p  <  s->p )
+            break;
         index = (p - s->p)/s->block_size;
-        printf("p ==%p, s->==%p  p - s->p:%ld index:%d\n",p,s->p,p - s->p,index);
+        
+        //printf("p ==%p, s->p==%p  p - s->p:%ld index:%d\n",p,s->p,p - s->p,index);
+
         if((p - s->p) % s->block_size != 0)
             index+=1;
-        printf("free index:%d\n",index);
-        
+       // printf("free index:%d\n",index);
         s->usecnts -= s->mem_nd[index].size;
-        s->mem_nd[index].use = 0;
+        
+        int i ,blocks ;
+        blocks = s->mem_nd[index].size;
         s->mem_nd[index].size = 0;
-        index++;
-        for(;s->mem_nd[index].use == 2;index++)
-                s->mem_nd[index].use = 0;
+        for(i = 0; i < blocks ; i++,index++ )
+            s->mem_nd[index%s->block_nums].use = 0;
         break;
     }
     
     if(s->lock_on)
         pthread_mutex_unlock(&s->pool_lock);
 
-    if(index != -1)
+    if(index >= 0)
         return;
-
+   // printf("start free malloc node p:%p\n",p);
     MALLOC_LIST *ls = NULL;
     if(s->lock_on)
         pthread_mutex_lock(&s->pool_lock);
@@ -241,12 +258,13 @@ void  mem_pool_free(MEM_POOL_ND* s,void* p)
         fprintf(stderr,"not malloc this buf->p:%p\n",p);
         return;
     }
-    
-    ls->next->last = ls->last;
+   // printf("free ls->next:%p \n",ls->next);
+    if(ls->next != NULL)
+        ls->next->last = ls->last;
     ls->last->next = ls->next;
     if(s->lock_on)
         pthread_mutex_unlock(&s->pool_lock);
-
+    
     free(ls->p);
     free(ls);
     
