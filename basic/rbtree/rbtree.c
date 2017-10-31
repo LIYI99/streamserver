@@ -176,9 +176,72 @@ void    rbtree_delete(rbtree_t *tree, rbtree_node_t *node)
     }
 
     while(temp != *root && rbt_is_black(temp)){
-    
-    
+        
+        if(temp == temp->parent->left){
+            w = temp->parent->right;
+            
+            if(rbt_is_red(w)){
+                rbt_black(w);
+                rbt_red(temp->parent);
+                rbtree_left_rotate(root,sentinel,temp->parent);
+                w = temp->parent->right;
+            }
+            
+            if(rbt_is_black(w->left)) && rbt_is_black(w->right){
+                rbt_red(w);
+                temp = temp->parent;
+
+            }else{
+            
+                if(rbt_is_black(w->right)){
+                    rbt_black(w->left);
+                    rbt_red(w);
+                    rbtree_right_rotate(root,sentinel,w);
+                    w = temp->parent->right;
+                }
+
+                rbt_copy_color(w,temp->parent);
+                rbt_black(temp->parent);
+                rbt_black(w->right);
+                rbtree_left_rotate(root,sentinel,temp->parent);
+                
+            
+            }
+        
+        }else{
+        
+            w = temp->parent->left;
+            if(rbt_is_red(w)){
+                rbt_black(w);
+                rbt_red(temp->parent);
+                rbtree_right_rotate(root,sentinel,temp->parent);
+                w = temp->parent->left;
+            }
+        
+            if(rbt_is_black(w->left) && rbt_is_black(w->right)){
+                rbt_red(w);
+                temp =  temp->parent;
+            }else{
+            
+                if(rbt_is_black(w->left)){
+                    rbt_black(w->right);
+                    rbt_red(w);
+                    rbtree_left_rotate(root,sentinel,w);
+                    w = temp->parent->left;
+                }
+
+                rbt_copy_color(w,temp->parent);
+                rbt_black(temp->parent);
+                rbt_black(w->left);
+                rbtree_right_rotate(root,sentinel,temp->parent);
+
+                temp = *root;
+            
+            }
+
+        }
     }
+    rbt_black(temp);
 
 }
 rbtree_node_t*    rbtree_find(rbtree_t *tree, rbtree_key_t key);
