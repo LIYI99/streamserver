@@ -10,8 +10,8 @@
     extern  "C"{
 #endif 
 
-typedef int  rbtree_key_t;;
-typedef unsigned int    rbtree_key_uint_t;
+typedef intptr_t   rbtree_key_t;;
+typedef uintptr_t    rbtree_key_uint_t;
 typedef uint8_t     u_char;
 
 
@@ -59,7 +59,7 @@ void    rbtree_insert_timer_value(rbtree_node_t *root,rbtree_node_t *node,rbtree
 
 void    rbtree_LDR(rbtree_t *tree,  rbtree_display_pt  display);
 
-
+void    rbtree_LDR_recursive(rbtree_node_t *node,rbtree_node_t *sentinel);
 
 
 #define rbt_red(node)               ((node)->color = 1)

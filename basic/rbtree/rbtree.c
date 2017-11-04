@@ -223,7 +223,7 @@ void    rbtree_delete(rbtree_t *tree, rbtree_node_t *node)
     node->right = NULL;
     node->parent = NULL;
     node->key = 0 ;
-
+    //printf("red:%ld temp:%p,temp->color:%d\n",red,temp,temp->color);
     if(red){
         return ;
     }
@@ -231,8 +231,10 @@ void    rbtree_delete(rbtree_t *tree, rbtree_node_t *node)
     while(temp != *root && rbt_is_black(temp)){
         
         if(temp == temp->parent->left){
-            w = temp->parent->right;
             
+       //printf("L:red:%ld temp:%p,temp->color:%d temp->parent:%p\n",red,temp,temp->color,temp->parent);
+
+            w = temp->parent->right;
             if(rbt_is_red(w)){
                 rbt_black(w);
                 rbt_red(temp->parent);
@@ -257,12 +259,13 @@ void    rbtree_delete(rbtree_t *tree, rbtree_node_t *node)
                 rbt_black(temp->parent);
                 rbt_black(w->right);
                 rbtree_left_rotate(root,sentinel,temp->parent);
-                
+                temp = *root; 
             
             }
         
         }else{
-        
+          //printf(" R:red:%ld temp:%p,temp->color:%d\n",red,temp,temp->color);
+
             w = temp->parent->left;
             if(rbt_is_red(w)){
                 rbt_black(w);
@@ -492,13 +495,12 @@ static  rbtree_node_t* stack_pop(struct rbtree_stack* s)
     
 }  
 
-static void rbtree_LDR_(rbtree_node_t *node ,rbtree_node_t *sentinel);
-static void    rbtree_LDR_(rbtree_node_t *node ,rbtree_node_t *sentinel){
-    
+void    rbtree_LDR_recursive(rbtree_node_t *node,rbtree_node_t *sentinel)
+{   
         if(node != sentinel){
-            rbtree_LDR_(node->left,sentinel);
-            printf("key:%d\n",node->key);
-            rbtree_LDR_(node->right,sentinel);
+            rbtree_LDR_recursive(node->left,sentinel);
+            printf("key:%ld\n",node->key);
+            rbtree_LDR_recursive(node->right,sentinel);
         }
     
 }
@@ -512,7 +514,7 @@ void    rbtree_LDR(rbtree_t *tree,  rbtree_display_pt  display)
     sentinel = tree->sentinel;
     temp = tree->root;
     
-    //rbtree_LDR_(temp ,sentinel);
+    //rbtree_LDR_recursive(temp ,sentinel);
     //return;
 
     struct rbtree_stack S;
@@ -532,7 +534,7 @@ void    rbtree_LDR(rbtree_t *tree,  rbtree_display_pt  display)
             
             if(!stack_empty(&S)){
                 temp = stack_pop(&S);
-                printf("temp:%prbtree->key: %d\n",temp,temp->key);
+                printf("temp:%prbtree->key: %ld\n",temp,temp->key);
                 temp = temp->right;
             }
     }
