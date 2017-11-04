@@ -2,12 +2,16 @@
 #define __RB_TREE_H__ 
 
 
+#include <stdint.h>
+
+
+
 #ifdef __cplusplus 
     extern  "C"{
 #endif 
 
-typedef intptr_t    rbtree_key_t;;
-typedef uintptr_t   rbtree_key_uint_t;
+typedef int  rbtree_key_t;;
+typedef unsigned int    rbtree_key_uint_t;
 typedef uint8_t     u_char;
 
 
@@ -20,6 +24,7 @@ struct rbtree_node_s {
     rbtree_node_t       *right;
     rbtree_node_t       *parent;
     u_char              color;
+    rbtree_key_uint_t   size;   //mem manger       
     void*               data;   //slave
 };
 
@@ -52,7 +57,7 @@ rbtree_node_t*    rbtree_find(rbtree_t *tree, rbtree_key_t key);
 void    rbtree_insert_value(rbtree_node_t *root,rbtree_node_t *node,rbtree_node_t *sentinel);
 void    rbtree_insert_timer_value(rbtree_node_t *root,rbtree_node_t *node,rbtree_node_t *sentinel);
 
-void    rbtree_LRD(rbtree_t *tree,  rbtree_display_pt  display);
+void    rbtree_LDR(rbtree_t *tree,  rbtree_display_pt  display);
 
 
 
