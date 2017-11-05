@@ -537,3 +537,20 @@ void*    rbtree_LDR_MEM(rbtree_t *tree,int size)
 
 }
 
+#if 0
+
+void*    rbtree_DLR_MEM(rbtree_node_t  *node, rbtree_node_t *sentinel,int size)
+{
+    
+    void *re_o = NULL,
+    if(node != sentinel){
+            
+            printf("key:%ld\n",node->key);
+            rbtree_DLR_MEM(node->left,sentinel,size);
+            rbtree_DLR_MEM(node->right,sentinel,size);
+        }
+    
+
+}
+#endif
+
