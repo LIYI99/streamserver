@@ -1,6 +1,6 @@
 include config.mak
 
-CSRC = mem_pool.c
+CSRC = mem_pool.c darr_queue.c
 SLSRC = 
 
 COBJS = ${CSRC:%.c=%.o}
@@ -19,10 +19,10 @@ $(TARGET) : $(COBJS) $(SOBJS)
 	$(CC) -c $(COPS) -I. -o $@ $<
 
 share:
-	$(CC) $(COPS) mem_pool.c -shared -o libmem_pool.so
+	$(CC) $(COPS) mem_pool.c darr_queue.h -shared -o libmem_pool.so
 clean :
 	/bin/rm -f *.o
 	/bin/rm -r *.a
 test:
-	gcc  test.c $(TARGET)  -o test_mem_pool -lpthread
+	gcc  $(COPS) -g  test.c $(TARGET) librbtree.a  -o test_mem_pool -lpthread
 

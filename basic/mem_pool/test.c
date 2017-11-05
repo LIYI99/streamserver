@@ -51,8 +51,10 @@ static void*    test_func_cmp(void *data){
     gettimeofday(&tv1,NULL);
 
     for(i = 0 ; i <  TEST_TIMES; i++){
-        k =  35678;
+        k =  rand()%10000+1;
+        k = 1024;
         p =  mem_pool_malloc(s,k);
+
         mem_pool_free(s,p);
         p = NULL;
 
@@ -63,7 +65,9 @@ static void*    test_func_cmp(void *data){
     
     gettimeofday(&tv1,NULL);
     for(i = 0 ; i <  TEST_TIMES; i++){
-        k =  35678*1000;
+        k =  8;
+        k =  rand()%10000+1;
+
         p =  malloc(k);
         free(p);
         p = NULL;
