@@ -128,7 +128,7 @@ int main(int argc ,char **argv)
     
     printf("test tree balance,del 50 nums data\n");
     save1 = NULL;
-    for(i = 0,k = 83 ; i < 50; i++ , k+= 2){
+    for(i = 0,k = 83 ; i < 59; i++ , k+= 2){
 
         save1 = rbtree_find(&test_tree,k);
         if(save1)

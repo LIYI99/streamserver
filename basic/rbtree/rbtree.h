@@ -60,6 +60,7 @@ void    rbtree_insert_timer_value(rbtree_node_t *root,rbtree_node_t *node,rbtree
 void    rbtree_LDR(rbtree_t *tree,  rbtree_display_pt  display);
 
 void    rbtree_LDR_recursive(rbtree_node_t *node,rbtree_node_t *sentinel);
+void*    rbtree_LDR_MEM(rbtree_t *tree,int size);
 
 
 #define rbt_red(node)               ((node)->color = 1)
