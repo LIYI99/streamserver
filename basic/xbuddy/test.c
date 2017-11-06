@@ -2,47 +2,67 @@
 #include <stdio.h>
 #include <time.h>
 
-struct buddy_mem_s{
-  unsigned  nums;
-  unsigned  block_size;
-  void*     p;
-  unsigned longest[0]; 
-};
+
 
 int main() {
     
 
 
-    unsigned    block_size = 256,nums = 200;
+    unsigned int     block_size = 1024,nums = 1024*10;
 
     buddymem_t* s = NULL;
     s = buddymem_create(block_size,nums);
-    printf("s:%p \n",s);
-
-
-    void *p = NULL;
     
-    unsigned    test_times = 10,i = 0;
+
+    void *p = NULL,*p1 = NULL;
+    
+    unsigned int    test_times = 1000*10000,i = 0;
     
     struct timeval tv1,tv2;
-    printf("s:%p s->p:%p \n",s,s->p);
-    
+  #if 0   
+    for(i = 0 ; i  < 10 ; i++){
+        
+        p = buddymem_alloc(s,128);
+        p = buddymem_alloc(s,256);
+
+    }
+#endif
 
     gettimeofday(&tv1,NULL);
-
+    int k = 0;
     for(i =  0 ; i < test_times ; i++){
-        
-        p = buddymem_alloc(s,512);
-        printf("malloc p:%p s->p:%p \n",p,s->p);
-        buddymem_free(s,p);
-        p = buddymem_alloc(s,496);
-        printf("malloc p:%p s->p:%p \n",p,s->p);
-
+        k = rand()%10000 + 1;
+        p = buddymem_alloc(s,1024*1024);
+        if(i < 3)
+            printf("malloc :%p\n",p);
         buddymem_free(s,p);
     }
     gettimeofday(&tv2,NULL);
     printf("POOL_malloc and free :%d times,use usec:%ld\n",test_times,
             (tv2.tv_sec - tv1.tv_sec) *1000*1000 + tv2.tv_usec - tv1.tv_usec);
+
+
+    gettimeofday(&tv1,NULL);
+    for(i =  0 ; i < test_times ; i++){
+        k = rand()%10000+ 1;
+        p = malloc(1024*1024);
+        free(p);
+    }
+    gettimeofday(&tv2,NULL);
+    printf("SYSTEM_malloc and free :%d times,use usec:%ld\n",test_times,
+            (tv2.tv_sec - tv1.tv_sec) *1000*1000 + tv2.tv_usec - tv1.tv_usec);
+
+    int xx = 0;
+    gettimeofday(&tv1,NULL);
+    for(i =  0 ; i < test_times ; i++){
+        k = rand()%10000+1;
+       // xx = 1024*k; 
+    }
+    gettimeofday(&tv2,NULL);
+    printf("  x*y:%d times,use usec:%ld\n",test_times,
+            (tv2.tv_sec - tv1.tv_sec) *1000*1000 + tv2.tv_usec - tv1.tv_usec);
+
+
 
 
 
