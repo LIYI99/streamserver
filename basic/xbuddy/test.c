@@ -8,7 +8,7 @@ int main() {
     
 
 
-    unsigned int     block_size = 1024,nums = 1024*10;
+    unsigned int     block_size = 863,nums = 1025;    
 
     buddymem_t* s = NULL;
     s = buddymem_create(block_size,nums);
@@ -16,10 +16,10 @@ int main() {
 
     void *p = NULL,*p1 = NULL;
     
-    unsigned int    test_times = 1000*10000,i = 0;
+    unsigned int    test_times = 10*1,i = 0;
     
     struct timeval tv1,tv2;
-  #if 0   
+#if 0   
     for(i = 0 ; i  < 10 ; i++){
         
         p = buddymem_alloc(s,128);
@@ -32,7 +32,7 @@ int main() {
     int k = 0;
     for(i =  0 ; i < test_times ; i++){
         k = rand()%10000 + 1;
-        p = buddymem_alloc(s,1024*1024);
+        p = buddymem_alloc(s,256);
         if(i < 3)
             printf("malloc :%p\n",p);
         buddymem_free(s,p);
@@ -44,8 +44,8 @@ int main() {
 
     gettimeofday(&tv1,NULL);
     for(i =  0 ; i < test_times ; i++){
-        k = rand()%10000+ 1;
-        p = malloc(1024*1024);
+        k = rand()%1000000+ 1;
+        p = malloc(k);
         free(p);
     }
     gettimeofday(&tv2,NULL);

@@ -7,12 +7,12 @@
 
 
 struct buddy_mem_s{
-  unsigned  int nums;
-  unsigned  int block_size;
-  unsigned  int buf_size;
-  void*             p;
-  void*             end;
-  unsigned  int longest[1]; 
+    unsigned  int nums;
+    unsigned  int block_size;
+    unsigned  int buf_size;
+    void*             p;
+    void*             end;
+    unsigned  int longest[1]; 
 };
 
 #define     LEFT_LEAF(index) ((index) * 2 + 1)
@@ -27,12 +27,12 @@ struct buddy_mem_s{
 
 
 static unsigned int fixsize(unsigned int size) {
-  size |= size >> 1;
-  size |= size >> 2;
-  size |= size >> 4;
-  size |= size >> 8;
-  size |= size >> 16;
-  return size+1;
+    size |= size >> 1;
+    size |= size >> 2;
+    size |= size >> 4;
+    size |= size >> 8;
+    size |= size >> 16;
+    return size+1;
 }
 
 buddymem_t* buddymem_create( int block_size,int nums )
@@ -46,17 +46,24 @@ buddymem_t* buddymem_create( int block_size,int nums )
         }
         nums = 1;
         nums = nums << k;
-        printf("nums is not 2x ,now change nums is:%d x:%d\n",nums,k);
+        printf("nums is not 2x ,now change nums is:%d \n",nums);
     }
-    
+
+    if(!IS_POWER_OF_S(block_size)){
+        block_size = fixsize(block_size);
+        printf("block_size:%d nums:%d\n",block_size,nums);
+    }
+
+
+
     if( nums < 1 || block_size < sizeof(int) || !IS_POWER_OF_S(nums))
         return NULL;
-    
+
     s =  (buddymem_t *)malloc(sizeof(buddymem_t) + 
             nums*2*sizeof(unsigned int ) + block_size*nums);
     if(s == NULL)
         return NULL;
-    
+
     memset(s,0x0,sizeof(buddymem_t));
     node_size = block_size *nums*2;
 
@@ -73,16 +80,16 @@ buddymem_t* buddymem_create( int block_size,int nums )
         if(IS_POWER_OF_S(i + 1))
             node_size /= 2;
         s->longest[i] = node_size;
-   //     printf("index:%d node_size:%d\n",i,node_size);
+        //printf("index:%d node_size:%d\n",i,node_size);
     }
-    
+
     return s;
 
 }
 
 void    buddymem_destroy( buddymem_t*  s)
 {
-    
+
     if(s)
         free(s);
     return;
@@ -90,19 +97,24 @@ void    buddymem_destroy( buddymem_t*  s)
 }
 void*   buddymem_alloc(buddymem_t *s, int size)
 {
-    
-    
+
+
     if(size <= 0)
         return NULL;
-    
+
     unsigned int index = 0,node_size = 0,offset = 0;
-    
+
     if(s->longest[index] < size)
         return NULL;
-
-    if((size % s->block_size) !=  0)
-        size = size + (s->block_size - (size%s->block_size));
     
+    if(size < s->block_size)
+        size = s->block_size;
+    else if(!IS_POWER_OF_S(size))
+        size = fixsize(size);
+    else 
+        size = s->block_size;
+
+   
     node_size =  s->buf_size ;
 
     for( node_size; node_size != size; node_size /= 2 )
@@ -112,7 +124,8 @@ void*   buddymem_alloc(buddymem_t *s, int size)
         else
             index = RIGHT_LEAF(index);
     }
-    
+    printf("size:%d index:%d s->p:%p \n",size,index,s->p);
+
     s->longest[index] = 0;
     offset = (index + 1) * node_size - ( s->buf_size);
     //printf("offset:%d index:%d\n",offset,index); 
@@ -120,27 +133,35 @@ void*   buddymem_alloc(buddymem_t *s, int size)
     {
         index = PARENT(index);
         s->longest[index] = 
-        MAX(s->longest[LEFT_LEAF(index)], s->longest[RIGHT_LEAF(index)]);
+            MAX(s->longest[LEFT_LEAF(index)], s->longest[RIGHT_LEAF(index)]);
     }
-    
+
     return s->p + offset;
+
+}
+
+static  inline int is_adjoin(buddymem_t* s,unsigned int lindex,
+        unsigned int rindex)
+{
 
 }
 
 void*   buddymem_alloc_2(buddymem_t *s, int size)
 {
-    if(s == NULL || size <= 0)
+    
+    if(size <= 0)
         return NULL;
-    
-    if((size % s->block_size) !=  0)
-        size = size + (s->block_size - (size%s->block_size));
-    
+
     unsigned int index = 0,node_size = 0,offset = 0;
 
     if(s->longest[index] < size)
         return NULL;
-    
-    node_size = s->nums *s->block_size;
+
+    if(!IS_POWER_OF_S(size))
+        size = fixsize(size);
+
+
+    node_size =  s->buf_size ;
 
     for( node_size; node_size != size; node_size /= 2 )
     {
@@ -149,17 +170,29 @@ void*   buddymem_alloc_2(buddymem_t *s, int size)
         else
             index = RIGHT_LEAF(index);
     }
-    
+
     s->longest[index] = 0;
-    offset = (index + 1) * node_size - ( s->nums * s->block_size);
-    //printf("offset:%d index:%d\n",offset,index); 
+    offset = (index + 1) * node_size - ( s->buf_size);
+    
+    unsigned int save_lsize = 0,save_rsize = 0;
+
+
     while(index) 
     {
         index = PARENT(index);
+        
+        save_lsize = s->longest[LEFT_LEAF(index)];
+        save_rsize = s->longest[RIGHT_LEAF(index)];
+        if(save_lsize == 0 || save_rsize == 0){
+            s->longest[index] = MAX(save_lsize,save_rsize);
+        }else{
+            
+        }
+
         s->longest[index] = 
-        MAX(s->longest[LEFT_LEAF(index)], s->longest[RIGHT_LEAF(index)]);
+            MAX(s->longest[LEFT_LEAF(index)], s->longest[RIGHT_LEAF(index)]);
     }
-    
+
     return s->p + offset;
 
 }
@@ -195,7 +228,7 @@ void    buddymem_free(buddymem_t* s, void *p){
         else
             s->longest[index] = MAX(left_longest, right_longest);
     }
-    
+
     return;
 }
 
@@ -209,20 +242,20 @@ int     buddymem_size(buddymem_t* s, void *p)
         return 0;
     if(p < s->p)
         return 0;
-    
+
     unsigned int node_size = s->block_size;
     unsigned int index = 0,offset = 0;
 
     offset  = (p - s->p)/s->block_size ;
     for (index = offset + s->nums - 1; s->longest[index] ; index = PARENT(index))
         node_size *= 2;
-    
+
     return  node_size;
 }
 
 
 void    buddymem_dump(buddymem_t* s){
-    
+
     return ;
 
 
@@ -230,41 +263,41 @@ void    buddymem_dump(buddymem_t* s){
 
 #if 0
 void buddy_mem_nd_dump(struct buddy_mem_nd* self) {
-  char canvas[65];
-  int i,j;
-  unsigned node_size, offset;
+    char canvas[65];
+    int i,j;
+    unsigned node_size, offset;
 
-  if (self == NULL) {
-    printf("buddy_mem_nd_dump: (struct buddy_mem_nd*)self == NULL");
-    return;
-  }
-
-  if (self->size > 64) {
-    printf("buddy_mem_nd_dump: (struct buddy_mem_nd*)self is too big to dump");
-    return;
-  }
-
-  memset(canvas,'_', sizeof(canvas));
-  node_size = self->size * 2;
-
-  for (i = 0; i < 2 * self->size - 1; ++i) {
-    if ( IS_POWER_OF_2(i+1) )
-      node_size /= 2;
-
-    if ( self->longest[i] == 0 ) {
-      if (i >=  self->size - 1) {
-        canvas[i - self->size + 1] = '*';
-      }
-      else if (self->longest[LEFT_LEAF(i)] && self->longest[RIGHT_LEAF(i)]) {
-        offset = (i+1) * node_size - self->size;
-
-        for (j = offset; j < offset + node_size; ++j)
-          canvas[j] = '*';
-      }
+    if (self == NULL) {
+        printf("buddy_mem_nd_dump: (struct buddy_mem_nd*)self == NULL");
+        return;
     }
-  }
-  canvas[self->size] = '\0';
-  puts(canvas);
+
+    if (self->size > 64) {
+        printf("buddy_mem_nd_dump: (struct buddy_mem_nd*)self is too big to dump");
+        return;
+    }
+
+    memset(canvas,'_', sizeof(canvas));
+    node_size = self->size * 2;
+
+    for (i = 0; i < 2 * self->size - 1; ++i) {
+        if ( IS_POWER_OF_2(i+1) )
+            node_size /= 2;
+
+        if ( self->longest[i] == 0 ) {
+            if (i >=  self->size - 1) {
+                canvas[i - self->size + 1] = '*';
+            }
+            else if (self->longest[LEFT_LEAF(i)] && self->longest[RIGHT_LEAF(i)]) {
+                offset = (i+1) * node_size - self->size;
+
+                for (j = offset; j < offset + node_size; ++j)
+                    canvas[j] = '*';
+            }
+        }
+    }
+    canvas[self->size] = '\0';
+    puts(canvas);
 }
 #endif
 
