@@ -1,12 +1,14 @@
 #include "object_pool.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
 
 #define     USEING_STATE    1
 #define     FREE_STATE      0
-
      
-
 object_pool_t*  object_pool_create(unsigned int object_size,unsigned int max,
-        object_node_init  func)
+        object_node_init func)
 {
     
     
@@ -37,7 +39,7 @@ object_pool_t*  object_pool_create(unsigned int object_size,unsigned int max,
     for( i = 0;  i < max ;i++){
         nodep =  (struct qnode *)(s->pool + node_size*i);
 
-        datap = nodep + sizeof(struct qnode);
+        datap = ((void *)nodep) + sizeof(struct qnode);
         if(func){
             func(datap);
         }
@@ -66,19 +68,14 @@ void    object_pool_destory(object_pool_t *s){
 
 }
 //get
-void*   object_pool_de(object_pool_t *s){
+void*   object_pool_get(object_pool_t *s){
     
 
-    if(s == NULL)
+    //not have node 
+   if(s->head == NULL && s->end == NULL)
         return NULL;
-
-    //not have node
-    if(s->head == NULL && s->end == NULL)
-        return NULL;
-    
-    struct qnode *node = NULL;
-    node =  s->end;
-    
+   
+   struct qnode *node = node =  s->end;
     //only one
     if(s->end == s->head){
         s->end  = NULL;
@@ -88,29 +85,26 @@ void*   object_pool_de(object_pool_t *s){
         node->prev->next = NULL;
     }
     node->tab = USEING_STATE  ; //use
+    s->usecnts++;
 
-
-   return  (void *)node + sizeof(struct qnode);
+   return  ((void *)node) + sizeof(struct qnode);
 
 }
 
 
 //free
-void   object_pool_en(object_pool_t *s,void *p){
+void   object_pool_free(object_pool_t *s,void *p){
     
-    
-    if(s == NULL || p == NULL)
-        return ;
-    
+       
     if(s->_init){
         s->_init(p);
     }
 
     struct qnode  *node = NULL,*temp = NULL;
-    node = (struct qnode *) (  p  - sizeof(struct qnode));
+    node = (struct qnode *) ( p  - sizeof(struct qnode));
     
     //freed
-    if(node->tab != 1)
+    if(node->tab != USEING_STATE)
         return;
     //not node 
     if(s->end == NULL  && s->head == NULL){
@@ -124,8 +118,30 @@ void   object_pool_en(object_pool_t *s,void *p){
     }
     
     node->tab = FREE_STATE;
-    
+    s->usecnts--;
+
     return ;
 
 }
+
+void    object_pool_deinfo(object_pool_t *s,object_node_init func){
+    
+    unsigned int k = 0;
+    struct qnode    *node = NULL;
+    void *p = NULL;
+
+
+    for(k = 0 ; k < s->max ; k++)
+    {
+        p = (s->pool+(k*s->object_size));
+        node  =  (struct qnode *)p;
+        printf("node sate:%d\n",node->tab);
+        p = p+sizeof(struct qnode);
+        func(p);
+    }
+    return ;
+
+
+}
+
 

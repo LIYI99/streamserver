@@ -10,12 +10,12 @@
 
 
 typedef struct object_pool_s object_pool_t;
-typedef (void) (*object_node_init)(void *data);
+typedef void (*object_node_init)(void *data);
 
 struct  qnode {
     unsigned char tab; 
-    struct qonde    *prev;
-    struct qonde    *next;
+    struct qnode    *prev;
+    struct qnode    *next;
 };
 
 struct object_pool_s {
@@ -33,10 +33,13 @@ struct object_pool_s {
 
 
 object_pool_t*  object_pool_create(unsigned int object_size,unsigned int max,
-        object_node_init *func);
+        object_node_init func);
 void    object_pool_destory(object_pool_t *s);
 void*   object_pool_get(object_pool_t *s);
-void*   object_pool_free(object_pool_t *s);
+void   object_pool_free(object_pool_t *s,void* p);
+
+void    object_pool_deinfo(object_pool_t *s,object_node_init func);
+
 
 
 
